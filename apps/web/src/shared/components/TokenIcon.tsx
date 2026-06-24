@@ -19,6 +19,19 @@ const SYMBOL_TO_CDN: Record<string, string> = {
   BNB: `${CDN_BASE}/bnb.svg`,
 }
 
+const SYMBOL_ALIASES: Record<string, string> = {
+  WBTC: "BTC",
+}
+
+/** Normalize faucet/trading symbols (e.g. TWBTC, wbtc) to CDN lookup keys. */
+export function normalizeTokenSymbol(symbol: string): string {
+  let upper = symbol.trim().toUpperCase()
+  if (upper.startsWith("T") && upper.length > 1) {
+    upper = upper.slice(1)
+  }
+  return SYMBOL_ALIASES[upper] ?? upper
+}
+
 const PLACEHOLDER_COLORS: Record<string, string> = {
   BTC: "bg-orange-500/15 text-orange-400 ring-orange-500/25",
   ETH: "bg-indigo-500/15 text-indigo-400 ring-indigo-500/25",
@@ -29,10 +42,11 @@ const PLACEHOLDER_COLORS: Record<string, string> = {
 
 export function TokenIcon({ symbol, size = 32, className }: Props) {
   const [imgError, setImgError] = useState(false)
-  const upper = symbol.toUpperCase()
-  const cdnUrl = SYMBOL_TO_CDN[upper]
+  const normalized = normalizeTokenSymbol(symbol)
+  const cdnUrl = SYMBOL_TO_CDN[normalized]
   const showImg = !!cdnUrl && !imgError
-  const color = PLACEHOLDER_COLORS[upper] ?? "bg-muted/60 text-muted-foreground ring-border"
+  const color = PLACEHOLDER_COLORS[normalized] ?? "bg-muted/60 text-muted-foreground ring-border"
+  const initials = normalized.slice(0, 2)
 
   return (
     <div
@@ -56,7 +70,7 @@ export function TokenIcon({ symbol, size = 32, className }: Props) {
         />
       ) : (
         <span style={{ fontSize: Math.max(8, size * 0.3) }} className="font-semibold leading-none">
-          {upper.slice(0, 2)}
+          {initials}
         </span>
       )}
     </div>
