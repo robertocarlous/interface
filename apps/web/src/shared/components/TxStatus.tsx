@@ -1,9 +1,9 @@
+import { parseSorobanError } from "@workspace/contracts"
 import { explorerTxUrl } from "@/app/config/network"
-import { parseSorobanError } from "@/lib/contracts"
 
 export type TxStatusState =
   | { status: "pending" }
-  | { status: "success"; hash: string }
+  | { status: "success"; hash?: string }
   | { status: "failed"; error: unknown }
 
 type Props = {
@@ -28,12 +28,16 @@ function Pending() {
         className="mt-0.5 size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
         aria-hidden="true"
       />
-      <span className="text-sm">Waiting for confirmation…</span>
+      <span role="status" aria-live="polite" className="text-sm">
+        Waiting for confirmation…
+      </span>
     </>
   )
 }
 
-function Success({ hash }: { hash: string }) {
+function Success({ hash }: { hash?: string }) {
+  const txHash = hash?.trim()
+
   return (
     <>
       <svg
@@ -51,17 +55,21 @@ function Success({ hash }: { hash: string }) {
           strokeLinejoin="round"
         />
       </svg>
-      <div className="flex min-w-0 flex-col gap-0.5">
+      <div role="status" aria-live="polite" className="flex min-w-0 flex-col gap-0.5">
         <span className="text-sm font-medium text-green-500">Transaction confirmed</span>
-        <span className="truncate font-mono text-xs text-muted-foreground">{hash}</span>
-        <a
-          href={explorerTxUrl(hash)}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs text-primary hover:underline"
-        >
-          View on Stellar Expert →
-        </a>
+        {txHash ? (
+          <>
+            <span className="truncate font-mono text-xs text-muted-foreground">{txHash}</span>
+            <a
+              href={explorerTxUrl(txHash)}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              View on Stellar Expert →
+            </a>
+          </>
+        ) : null}
       </div>
     </>
   )
@@ -84,7 +92,9 @@ function Failed({ error }: { error: unknown }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="text-sm text-destructive">{parseSorobanError(error)}</span>
+      <span role="status" aria-live="polite" className="text-sm text-destructive">
+        {parseSorobanError(error)}
+      </span>
     </>
   )
 }
